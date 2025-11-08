@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8"/>
  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#111111">
 
   <title>AROBIX — Mobile Demo</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
@@ -283,6 +285,7 @@
   </style>
 </head>
 <body>
+
   <div class="device" id="app">
 
     <!-- Side menu -->
@@ -937,6 +940,14 @@
   });
 </script>
 
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .then(() => console.log("✅ Service Worker registered"))
+      .catch((err) => console.error("SW failed:", err));
+  }
+</script>
+
 </body>
 </html>
-
