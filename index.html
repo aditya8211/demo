@@ -955,9 +955,238 @@
       .catch((err) => console.error("SW failed:", err));
   }
 </script>
+<script>
+/* -------------------------
+   Demo products (images, price)
+   ------------------------- */
+const products = [
+  { id:'p1', title:'Cotton-Terry Hoodie', price:198, category:'hoodie',
+    img:'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=1200&auto=format&fit=crop',
+    desc:'Unisex cotton-terry hoodie. Comfortable and warm.', tags:['NEW'] },
+  { id:'p2', title:'Relaxed Sweatshirt', price:106, category:'tshirt',
+    img:'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=1200&auto=format&fit=crop',
+    desc:'Relaxed fit sweatshirt with soft fabric.', tags:['SALE'] },
+  { id:'p3', title:'Classic Cap', price:32, category:'hat',
+    img:'https://images.unsplash.com/photo-1591012911209-6b9f8b6cc2c9?q=80&w=1200&auto=format&fit=crop',
+    desc:'Minimal baseball cap with adjustable strap.', tags:['TREND'] },
+  { id:'p4', title:'Runner Sneakers', price:120, category:'sneaker',
+    img:'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop',
+    desc:'Lightweight runner sneakers for daily use.', tags:['NEW'] }
+];
+
+/* -------------------------
+   Local Storage Keys
+   ------------------------- */
+const KEY_CART = 'arobix_cart';
+const KEY_PROFILE = 'arobix_profile';
+const KEY_ORDERS = 'arobix_orders';
+
+let cart = loadCartFromLocal(); 
+let currentProduct = null;
+let isMenuOpen = false;
+
+/* DOM refs */
+const productGrid = document.getElementById('productGrid');
+const screens = document.querySelectorAll('.screen');
+const sideMenu = document.getElementById('sideMenu');
+const navItems = {
+  home: document.getElementById('navHome'),
+  cart: document.getElementById('navCart'),
+  orders: document.getElementById('navOrders'),
+  profile: document.getElementById('navProfile')
+};
+
+/* ===== Profile handling ===== */
+function saveProfileToLocal(profile){
+  localStorage.setItem(KEY_PROFILE, JSON.stringify(profile));
+  applyProfileToUI(profile);
+}
+function loadProfileFromLocal(){
+  const raw = localStorage.getItem(KEY_PROFILE);
+  return raw ? JSON.parse(raw) : null;
+}
+function applyProfileToUI(profile){
+  const avatar = document.getElementById('topAvatar');
+  const userIcon = document.getElementById('topUserIcon');
+  if(profile && profile.photo){
+    avatar.src = profile.photo;
+    avatar.style.display = 'block';
+    userIcon.style.display = 'none';
+  } else {
+    avatar.style.display = 'none';
+    userIcon.style.display = 'block';
+  }
+  if(profile){
+    document.getElementById('inpName').value = profile.name || '';
+    document.getElementById('inpEmail').value = profile.email || '';
+  }
+  if(document.getElementById('checkoutName')) {
+    const prof = profile || {};
+    document.getElementById('checkoutName').value = prof.name || '';
+    document.getElementById('checkoutEmail').value = prof.email || '';
+  }
+}
+
+/* Save profile */
+function saveProfile(){
+  const name = document.getElementById('inpName').value.trim();
+  const email = document.getElementById('inpEmail').value.trim();
+  const file = document.getElementById('inpPhoto').files[0];
+  if(!name || !email){ alert('Please fill name and email'); return; }
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const profile = { name, email, photo: e.target.result };
+      saveProfileToLocal(profile);
+      alert('Profile saved');
+      navTo('home');
+    };
+    reader.readAsDataURL(file);
+  } else {
+    const profile = { name, email, photo: (loadProfileFromLocal()||{}).photo || null };
+    saveProfileToLocal(profile);
+    alert('Profile saved');
+    navTo('home');
+  }
+}
+function logout(){
+  localStorage.removeItem(KEY_PROFILE);
+  applyProfileToUI(null);
+  alert('Logged out');
+}
+
+/* ===== Products render & search ===== */
+function renderProducts(list = products){
+  productGrid.innerHTML = '';
+  list.forEach(p => {
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <img src="${p.img}" alt="${escapeHtml(p.title)}">
+      <div class="meta">
+        <h4>${escapeHtml(p.title)}</h4>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="price">$${p.price.toFixed(2)}</div>
+          <div style="font-size:12px;color:#6b7280">${p.tags[0]||''}</div>
+        </div>
+      </div>`;
+    card.onclick = ()=> showDetail(p.id);
+    productGrid.appendChild(card);
+  });
+}
+function onSearchChange(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  document.getElementById('clearSearch').style.display = q ? 'inline' : 'none';
+  const filtered = products.filter(p => p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+  renderProducts(filtered);
+}
+function clearSearch(){
+  const input = document.getElementById('searchInput');
+  input.value = '';
+  document.getElementById('clearSearch').style.display = 'none';
+  onSearchChange();
+}
+function toggleSearch(){
+  const box = document.getElementById('searchContainer');
+  box.classList.toggle('hidden');
+  if(!box.classList.contains('hidden')) document.getElementById('searchInput').focus();
+  else clearSearch();
+}
+
+/* ===== Navigation system + back button logic ===== */
+let backPressCount = 0;
+let backPressTimer = null;
+
+function navTo(screen){
+  screens.forEach(s => s.classList.remove('active'));
+  document.getElementById(screen).classList.add('active');
+  Object.values(navItems).forEach(n => n.classList.remove('active'));
+  if(navItems[screen]) navItems[screen].classList.add('active');
+
+  // push state for back navigation
+  history.pushState({screen}, "", "#" + screen);
+
+  if(screen === 'cart') renderCart();
+  if(screen === 'orders') renderOrders();
+}
+
+window.addEventListener('popstate', (e) => {
+  const state = e.state;
+  if(state && state.screen){
+    screens.forEach(s => s.classList.remove('active'));
+    document.getElementById(state.screen).classList.add('active');
+    Object.values(navItems).forEach(n => n.classList.remove('active'));
+    if(navItems[state.screen]) navItems[state.screen].classList.add('active');
+  } else handleBackExit();
+});
+
+function handleBackExit(){
+  backPressCount++;
+  if(backPressCount === 1){
+    alert("Press back again to exit app");
+    backPressTimer = setTimeout(()=> backPressCount=0, 2000);
+  } else if(backPressCount === 2){
+    alert("Press one more time to close app");
+  } else if(backPressCount >= 3){
+    window.close(); 
+    location.href = "about:blank";
+  }
+}
+window.addEventListener('load', () => {
+  history.replaceState({screen:'home'}, "", "#home");
+});
+
+/* ===== Cart Logic ===== */
+function loadCartFromLocal(){ try{ const raw = localStorage.getItem(KEY_CART); return raw ? JSON.parse(raw):{}; }catch(e){ return {}; } }
+function saveCartToLocal(){ localStorage.setItem(KEY_CART, JSON.stringify(cart)); }
+function addToCart(pid, qty=1){ if(!cart[pid]) cart[pid]=0; cart[pid]+=qty; saveCartToLocal(); renderCartBadge(); }
+function renderCartBadge(){ const c = Object.values(cart).reduce((a,b)=>a+b,0); document.getElementById('cartCount').textContent = `${c} item${c===1?'':'s'}`; }
+function renderCart(){
+  const el=document.getElementById('cartList'); el.innerHTML=''; let subtotal=0;
+  const pids=Object.keys(cart);
+  if(pids.length===0){ el.innerHTML='<div class="empty">Your bag is empty.</div>'; document.getElementById('cartSubtotal').textContent='$0.00'; renderCartBadge(); return; }
+  pids.forEach(pid=>{
+    const qty=cart[pid]; const p=products.find(x=>x.id===pid); if(!p)return;
+    subtotal+=p.price*qty;
+    const d=document.createElement('div'); d.className='cart-item';
+    d.innerHTML=`<img src="${p.img}"><div style="flex:1"><div style="display:flex;justify-content:space-between"><div>${p.title}</div><div>$${(p.price*qty).toFixed(2)}</div></div></div>`;
+    el.appendChild(d);
+  });
+  document.getElementById('cartSubtotal').textContent=`$${subtotal.toFixed(2)}`;
+  renderCartBadge(); saveCartToLocal();
+}
+
+/* ===== Checkout + Orders ===== */
+function createHiddenInput(name,val){const i=document.createElement('input');i.type='hidden';i.name=name;i.value=val;return i;}
+function prepareCheckoutFromCart(){
+  const pids=Object.keys(cart); if(pids.length===0){alert('Your cart is empty'); return;}
+  const items=[]; let total=0;
+  pids.forEach(pid=>{const qty=cart[pid]; const p=products.find(x=>x.id===pid); if(!p)return; items.push({id:p.id,title:p.title,price:p.price,qty}); total+=p.price*qty;});
+  document.getElementById('checkoutTopTitle').textContent='Cart Order';
+  document.getElementById('checkoutTotal').textContent=`$${total.toFixed(2)}`;
+  const hidden=document.getElementById('checkoutHiddenFields'); hidden.innerHTML='';
+  hidden.appendChild(createHiddenInput('order_items',JSON.stringify(items)));
+  hidden.appendChild(createHiddenInput('order_total',total.toFixed(2)));
+}
+
+/* Utils */
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+/* ===== Init ===== */
+renderProducts();
+renderCartBadge();
+applyProfileToUI(loadProfileFromLocal());
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./service-worker.js")
+  .then(()=>console.log("✅ Service Worker Registered"))
+  .catch(e=>console.error("SW Error:", e));
+}
+</script>
 
 </body>
 </html>
+
 
 
 
