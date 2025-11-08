@@ -1,25 +1,22 @@
 {
   "name": "Bazaarseliya",
-  "short_name": "Devs Aditya",
-  "start_url": "./index.html",
-  "scope": "./",
+  "short_name": "Dev Aditya",
+  "description": "Modern fashion & lifestyle web app.",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#111111",
+  "theme_color": "#000000",
   "orientation": "portrait",
-  "description": "Bazaarseliya - Modern E-Commerce web app with full offline PWA support.",
   "icons": [
     {
-      "src": "icons/icon-192x192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icons/icon-512x512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ]
 }
-
-
