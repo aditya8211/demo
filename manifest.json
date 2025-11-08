@@ -2,7 +2,7 @@
   "name": "Bazaarseliya",
   "short_name": "Dev Aditya",
   "description": "Modern fashion & lifestyle web app.",
-  "start_url": "/demo/index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
@@ -20,3 +20,4 @@
     }
   ]
 }
+
