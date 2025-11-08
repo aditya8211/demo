@@ -887,5 +887,56 @@
     // saveProfileToLocal({name:'Aditya', email:'aditya@example.com', photo:null});
     
   </script>
+  <script>
+  let backPressCount = 0;
+  let backPressTimer = null;
+
+  // har screen navigation ke baad history state push karo
+  function navTo(screen) {
+    screens.forEach(s => s.classList.remove('active'));
+    document.getElementById(screen).classList.add('active');
+    Object.values(navItems).forEach(n => n.classList.remove('active'));
+    if(navItems[screen]) navItems[screen].classList.add('active');
+
+    // save screen in history
+    history.pushState({screen}, "", "#" + screen);
+  }
+
+  // back button detect
+  window.addEventListener('popstate', (e) => {
+    const state = e.state;
+    if (state && state.screen) {
+      // agar koi valid screen hai to use show karo
+      screens.forEach(s => s.classList.remove('active'));
+      document.getElementById(state.screen).classList.add('active');
+      Object.values(navItems).forEach(n => n.classList.remove('active'));
+      if(navItems[state.screen]) navItems[state.screen].classList.add('active');
+    } else {
+      handleBackExit();
+    }
+  });
+
+  function handleBackExit() {
+    backPressCount++;
+    if (backPressCount === 1) {
+      alert("Press back again to exit app");
+      backPressTimer = setTimeout(() => backPressCount = 0, 2000); // 2 sec reset
+    } else if (backPressCount === 2) {
+      alert("Press one more time to close app");
+    } else if (backPressCount >= 3) {
+      // 3 bar press hone par app close
+      window.close(); // PWA me kaam karega (browser tab close nahi karega)
+      // fallback
+      location.href = "about:blank";
+    }
+  }
+
+  // jab app load hoti hai to ek default history state set karo
+  window.addEventListener('load', () => {
+    history.replaceState({screen:'home'}, "", "#home");
+  });
+</script>
+
 </body>
 </html>
+
