@@ -6,6 +6,12 @@
 <link rel="manifest" href="./manifest.json">
 
 <meta name="theme-color" content="#111111">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(() => console.log('Service Worker Registered'));
+  }
+</script>
 
   <title>AROBIX — Mobile Demo</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
@@ -952,6 +958,7 @@
 
 </body>
 </html>
+
 
 
 
