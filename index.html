@@ -288,6 +288,73 @@
     color: #ff785a;
   }
 }
+/* 🔧 Base layout for mobile */
+body {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-color, #fff);
+  color: var(--text-color, #000);
+  overflow-x: hidden;
+}
+
+/* 🔧 Product grid responsive */
+.card img {
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+}
+
+/* 🔧 Product grid layout */
+#productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 12px;
+}
+
+/* 🔧 Fix for small screen buttons and input */
+button, input {
+  font-size: 1rem;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* 🔧 Make header & bottom nav mobile friendly */
+.appbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  display: flex;
+  justify-content: space-around;
+  background: rgba(255,255,255,0.85);
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+@media (max-width: 400px) {
+  h1, h2, h3, h4 { font-size: 1rem; }
+  .card { font-size: 14px; }
+  .appbar .brand { font-size: 18px; }
+}
 
   </style>
 </head>
@@ -1186,6 +1253,7 @@ if("serviceWorker" in navigator){
 
 </body>
 </html>
+
 
 
 
